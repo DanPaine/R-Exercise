@@ -1,0 +1,146 @@
+install.packages("tidyr")
+install.packages("dplyr")
+library(dplyr)
+library(tidyr)
+
+allergies <- read.csv("C:/Users/danie/Desktop/CHOP Take Home/analyst-take-home-task-master/analyst-take-home-task-master/datasets/allergies.csv")
+encounters <- read.csv("C:/Users/danie/Desktop/CHOP Take Home/analyst-take-home-task-master/analyst-take-home-task-master/datasets/encounters.csv")
+medications <- read.csv("C:/Users/danie/Desktop/CHOP Take Home/analyst-take-home-task-master/analyst-take-home-task-master/datasets/medications.csv")
+patients <- read.csv("C:/Users/danie/Desktop/CHOP Take Home/analyst-take-home-task-master/analyst-take-home-task-master/datasets/patients.csv")
+procedures <- read.csv("C:/Users/danie/Desktop/CHOP Take Home/analyst-take-home-task-master/analyst-take-home-task-master/datasets/procedures.csv")
+
+#Part 1
+
+#Overdose encounter
+Cohort <- filter(encounters, encounters$REASONCODE == "55680006")
+
+#Encounter occurs after 7/15/1999
+Cohort$START <- as.POSIXct(Cohort$START, tz = "EST", format("%m/%d/%Y %H:%M"))
+Cohort <- filter(Cohort, Cohort$START > "1999-07-15")
+
+Cohort<-merge(Cohort, patients, by.x = "PATIENT", by.y = "Id", all = FALSE)
+
+Cohort$BIRTHDATE <- as.Date(Cohort$BIRTHDATE, format("%m/%d/%Y"))
+
+
+#Patient's age at the encounter is 18-35
+x=1
+while (x < count(Cohort)+1) {
+  Cohort$Age[x] <- length(seq(as.Date(Cohort$BIRTHDATE[x]), as.Date(Cohort$START[x]), by = "years"))-1
+  x = x+1
+}
+
+Cohort <- filter(Cohort, Age > 17 & Age < 36)
+View(Cohort)
+
+#Part 2
+
+#DEATH_AT_VISIT_IND
+NA->Cohort$DEATH_AT_VISIT_IND
+x=1
+
+Cohort$STOP <- as.POSIXct(Cohort$STOP, tz = "EST", format("%m/%d/%Y %H:%M"))
+Cohort$DEATHDATE <- as.Date(Cohort$DEATHDATE, format="%m/%d/%Y")
+
+
+while (x < count(Cohort)+1) 
+{
+  if (!is.na(difftime(Cohort$STOP[x], Cohort$DEATHDATE[x], units = "days"))) {
+    if (as.numeric(difftime(Cohort$DEATHDATE[x], Cohort$STOP[x], units = "days"))<1){
+      1->Cohort$DEATH_AT_VISIT_IND[x]
+      
+    }
+      else{
+        0->Cohort$DEATH_AT_VISIT_IND[x]
+    }
+  }
+  x = x+1
+}
+
+
+#COUNT_CURRENT_MEDS CURRENT_OPIOID_IND
+CohortIndex=1
+MedicationsIndex=1
+z=0
+0->Cohort$COUNT_CURRENT_MEDS
+0->Cohort$CURRENT_OPIOID_IND
+
+medications$START <- as.Date(medications$START, format="%m/%d/%Y")
+medications$STOP <- as.Date(medications$STOP, format="%m/%d/%Y")
+
+while (CohortIndex < count(Cohort)+1) {
+  z = 0
+  MedicationsIndex=1
+  PatientMeds <- filter(medications, medications$PATIENT == Cohort$PATIENT[CohortIndex])
+  while (MedicationsIndex < count(PatientMeds)+1) {
+    if (is.na(difftime(Cohort$START[CohortIndex], PatientMeds$STOP[MedicationsIndex], units = "days"))) {
+      if (as.numeric(difftime(Cohort$START[CohortIndex], PatientMeds$START[MedicationsIndex], units = "days"))>0) {
+        z = z + 1
+        if (PatientMeds$CODE[MedicationsIndex] == 316049 | 406022 | 429503 | 99969) {
+          Cohort$CURRENT_OPIOID_IND[CohortIndex] = 1
+        }
+      }
+    } else {
+      if (as.numeric(difftime(Cohort$START[CohortIndex], PatientMeds$STOP[MedicationsIndex], units = "days"))<0) {
+        if (as.numeric(difftime(Cohort$START[CohortIndex], PatientMeds$START[MedicationsIndex], units = "days"))>0) {
+          z = z + 1
+          if (PatientMeds$CODE[MedicationsIndex] == 316049 | 406022 | 429503 | 99969) {
+            Cohort$CURRENT_OPIOID_IND[CohortIndex] = 1
+          }
+        }
+      }
+    }
+    MedicationsIndex = MedicationsIndex + 1
+  }
+  Cohort$COUNT_CURRENT_MEDS[CohortIndex] = z
+  CohortIndex = CohortIndex + 1
+}
+
+
+#READMISSION
+Cohort$READMISSION_90_DAY_IND <- 0
+Cohort$READMISSION_30_DAY_IND <- 0
+Cohort$FIRST_READMISSION_DATE <- NA
+CohortIndex = 1
+EncounterIndex = 1
+while (CohortIndex < count(Cohort)+1) {
+  PatientAdmissions <- filter(Cohort, Cohort$PATIENT == Cohort$PATIENT[CohortIndex])
+  EncounterIndex = 1
+  Cohort$FIRST_READMISSION_DATE <- as.POSIXct(Cohort$FIRST_READMISSION_DATE, tz = "EST", format("%m-%d-%Y %H:%M:%S"), origin = "01-01-1970")
+  while (EncounterIndex < as.numeric(count(PatientAdmissions))+1){
+    if (as.numeric(difftime(Cohort$START[CohortIndex], PatientAdmissions$START[EncounterIndex], units = "days"))!=0) {
+      if (as.numeric(difftime(Cohort$START[CohortIndex],PatientAdmissions$START[EncounterIndex],  units = "days"))<90 & as.numeric(difftime(Cohort$START[CohortIndex],PatientAdmissions$START[EncounterIndex],  units = "days"))>-90) {
+        if (as.numeric(difftime(Cohort$START[CohortIndex],PatientAdmissions$START[EncounterIndex],  units = "days"))<0) {
+          Cohort$FIRST_READMISSION_DATE[CohortIndex] <- PatientAdmissions$START[EncounterIndex]
+          Cohort$READMISSION_90_DAY_IND[CohortIndex] <- 1
+        }
+        if (as.numeric(difftime( Cohort$START[CohortIndex], PatientAdmissions$START[EncounterIndex], units = "days"))<30 & as.numeric(difftime( Cohort$START[CohortIndex], PatientAdmissions$START[EncounterIndex], units = "days"))>-30) {
+          
+          if (as.numeric(difftime(Cohort$START[CohortIndex],PatientAdmissions$START[EncounterIndex],  units = "days"))<0) {
+            Cohort$READMISSION_30_DAY_IND[CohortIndex] <- 1
+          }
+        } 
+      } 
+    }
+    EncounterIndex = EncounterIndex+1
+  }
+  CohortIndex = CohortIndex+1
+}
+
+#Part 3
+
+Submission = data.frame(Cohort$PATIENT)
+Submission$PATIENT_ID <- Cohort$PATIENT
+Submission$Cohort.PATIENT <- NULL
+
+Submission$ENCOUNTER_ID <- Cohort$Id
+Submission$HOSPITAL_ENCOUNTER_DATE <- Cohort$START
+Submission$AGE_AT_VISIT <- Cohort$Age
+Submission$DEATH_AT_VISIT_IND <- Cohort$DEATH_AT_VISIT_IND
+Submission$COUNT_CURRENT_MEDS <- Cohort$COUNT_CURRENT_MEDS
+Submission$CURRENT_OPIOID_IND <- Cohort$CURRENT_OPIOID_IND
+Submission$READMISSION_90_DAY_IND <- Cohort$READMISSION_90_DAY_IND
+Submission$READMISSION_30_DAY_IND <- Cohort$READMISSION_30_DAY_IND
+Submission$FIRST_READMISSION_DATE <- Cohort$FIRST_READMISSION_DATE
+
+write.csv(Submission, "C:/Users/danie/Desktop/CHOP Take Home/submission/DANIEL_PAINE.csv", row.names = TRUE)
