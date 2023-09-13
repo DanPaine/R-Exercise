@@ -143,7 +143,7 @@ Submission$READMISSION_90_DAY_IND <- Cohort$READMISSION_90_DAY_IND
 Submission$READMISSION_30_DAY_IND <- Cohort$READMISSION_30_DAY_IND
 Submission$FIRST_READMISSION_DATE <- Cohort$FIRST_READMISSION_DATE
 
-write.csv(Submission, "C:/Users/danie/Desktop/CHOP Take Home/submission/DANIEL_PAINE.csv", row.names = TRUE)
+write.csv(Submission, "C:/Users/danie/Desktop/data exercise/submission/DANIEL_PAINE.csv", row.names = TRUE)
 
 
 
