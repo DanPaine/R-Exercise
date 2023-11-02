@@ -57,7 +57,7 @@ Export a dataset containing these required fields:
 
 ## Submission Guidelines
 
-Upon completion, please email the following to [DataRecruiting@email.chop.edu](mailto:DataRecruiting@email.chop.edu):
+Upon completion, please email the following:
 
 1. Data Exercise output dataset (`.csv`) (Please name the `.csv` file in the following format: "FIRSTNAME_LASTNAME.csv")
 2. Data Exercise code (text file)
