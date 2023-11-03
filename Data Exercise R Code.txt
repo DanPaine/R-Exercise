@@ -3,11 +3,11 @@ install.packages("dplyr")
 library(dplyr)
 library(tidyr)
 
-allergies <- read.csv("C:/Users/danie/Desktop/CHOP Take Home/analyst-take-home-task-master/analyst-take-home-task-master/datasets/allergies.csv")
-encounters <- read.csv("C:/Users/danie/Desktop/CHOP Take Home/analyst-take-home-task-master/analyst-take-home-task-master/datasets/encounters.csv")
-medications <- read.csv("C:/Users/danie/Desktop/CHOP Take Home/analyst-take-home-task-master/analyst-take-home-task-master/datasets/medications.csv")
-patients <- read.csv("C:/Users/danie/Desktop/CHOP Take Home/analyst-take-home-task-master/analyst-take-home-task-master/datasets/patients.csv")
-procedures <- read.csv("C:/Users/danie/Desktop/CHOP Take Home/analyst-take-home-task-master/analyst-take-home-task-master/datasets/procedures.csv")
+allergies <- read.csv("C:/Users/danie/Desktop/Take Home/analyst-take-home-task-master/analyst-take-home-task-master/datasets/allergies.csv")
+encounters <- read.csv("C:/Users/danie/Desktop/Take Home/analyst-take-home-task-master/analyst-take-home-task-master/datasets/encounters.csv")
+medications <- read.csv("C:/Users/danie/Desktop/Take Home/analyst-take-home-task-master/analyst-take-home-task-master/datasets/medications.csv")
+patients <- read.csv("C:/Users/danie/Desktop/Take Home/analyst-take-home-task-master/analyst-take-home-task-master/datasets/patients.csv")
+procedures <- read.csv("C:/Users/danie/Desktop/Take Home/analyst-take-home-task-master/analyst-take-home-task-master/datasets/procedures.csv")
 
 #Part 1
 
